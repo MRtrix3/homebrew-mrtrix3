@@ -1,6 +1,8 @@
-# mtrix3 installation via homebrew
+# MRtrix3 installation on OSX via homebrew
 
-To install mrtrix3 on you mac run the following commands:
+If you do not have homebrew yet, install it as described in http://brew.sh/
+
+To install MRtrix3 run the following commands:
 
     brew tap maxpietsch/mrtrix3
     brew install mrtrix3
