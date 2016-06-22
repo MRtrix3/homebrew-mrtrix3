@@ -7,8 +7,6 @@
     else
       @qmake = which('qmake')
     end
-    # TODO check if qmake is installed via homebrew but not linked
-    # @qmake = HOMEBREW_PREFIX"/opt/qt5/bin/qmake"
     @qmake
   end
   
@@ -24,8 +22,6 @@
   end
 end
 
-ENV['LIBLEPT_HEADERSDIR'] = HOMEBREW_PREFIX/"include"
-
 class Mrtrix3 < Formula
   desc "MRtrix provides a set of tools to perform diffusion-weighted MRI white matter tractography in the presence of crossing fibres, 
     using Constrained Spherical Deconvolution (Tournier et al.. 2004; Tournier et al. 2007), and a probabilisitic streamlines algorithm 
@@ -36,10 +32,11 @@ class Mrtrix3 < Formula
     For more information on how to install and use MRtrix go to http://mrtrix.readthedocs.io
     "
   homepage "mrtrix.org"
+
   url "https://github.com/MRtrix3/mrtrix3/archive/0.3.15.tar.gz"
-  # head 'https://github.com/user/my-bash-scripts.git'
-  version "0.3.15"
   sha256 "abce25cde2870abc8bd487f44f061d3e3bd42f36618519b740b7f5e74eba1e20"
+  version "0.3.15"
+  head 'https://github.com/MRtrix3/mrtrix3.git'
 
   depends_on "eigen" => :build
   depends_on "pkg-config" => :build
@@ -47,6 +44,7 @@ class Mrtrix3 < Formula
   depends_on Qt5Requirement => :recommended
 
   option "build_single_thread", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
+  option "link_matlab", "Link matlab scripts to your homebrew bin directory."
 
   def execute (cmd)
     # verbose alternative to: system cmd
@@ -67,16 +65,15 @@ class Mrtrix3 < Formula
   end
 
   def install
-    # mkdir(File.join(prefix, "icons"))
-    # cp Dir['icons/*'], "#{prefix}/icons/"
-    # prefix.mkdir()
     cp "LICENCE.txt", "#{prefix}/"
-    # bin.install_symlink prefix/"lib"
-    # bin.install_symlink prefix/"icons"
     bin.mkpath()
+    system "mkdir", "#{prefix}/lib"
 
     system "mkdir", "#{prefix}/matlab"
     cp_r 'matlab/.', "#{prefix}/matlab/"
+    if build.include? "link_matlab"
+      bin.install Dir["matlab/*"]
+    end
 
     system "mkdir", "#{prefix}/icons"
     cp_r 'icons/.', "#{prefix}/icons/"
@@ -90,30 +87,22 @@ class Mrtrix3 < Formula
       # bin.install_symlink prefix/"scripts/"Pathname(scrpt).each_filename.to_a[-1]
       system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
     end
-    system "mkdir", "#{prefix}/lib"
-    # install Dir["scripts/*"] # this overwrites the lib directory 
 
     if build.include? "build_single_thread"
       ENV["NUMBER_OF_PROCESSORS"] = "1"
     end
 
-    conf = [ "./configure", "-noshared" ]
+    conf = [ "./configure"]
     if build.include? "without-qt5"
       conf.push("-nogui")
     end
     execute (conf.join(" "))
 
     execute ("./build")
-    # execute ("./build release/bin/transformcalc")
 
     bin.install Dir["release/bin/*"]
-    # lib.install Dir["lib/*"]
+    cp_r 'release/lib/.', "#{prefix}/lib/"
 
-    cp_r 'lib/.', "#{prefix}/lib/"
-
-    # system false
-
-    # Mrtrix3.new.brew { cp Dir['lib/*'], "#{share}/mrtrix3/" }
   end
 end
 
