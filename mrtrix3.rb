@@ -44,7 +44,6 @@ class Mrtrix3 < Formula
   depends_on Qt5Requirement => :recommended
 
   option "build_single_thread", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
-  option "link_matlab", "Link matlab scripts to your homebrew bin directory."
 
   def execute (cmd)
     # verbose alternative to: system cmd
@@ -68,25 +67,11 @@ class Mrtrix3 < Formula
     cp "LICENCE.txt", "#{prefix}/"
     bin.mkpath()
     system "mkdir", "#{prefix}/lib"
-
-    system "mkdir", "#{prefix}/matlab"
-    cp_r 'matlab/.', "#{prefix}/matlab/"
-    if build.include? "link_matlab"
-      bin.install Dir["matlab/*"]
-    end
+    system "mkdir", "#{prefix}/release"
+    system "ln", "-s", "#{prefix}/bin", "#{prefix}/release/bin"
 
     system "mkdir", "#{prefix}/icons"
     cp_r 'icons/.', "#{prefix}/icons/"
-
-    # copy and link scripts directory
-    system "mkdir", "#{prefix}/scripts"
-    cp_r 'scripts/.', "#{prefix}/scripts/"
-    scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initParser" | sort`
-    for scrpt in scripts.split("\n")
-      # print scrpt+"\n"
-      # bin.install_symlink prefix/"scripts/"Pathname(scrpt).each_filename.to_a[-1]
-      system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
-    end
 
     if build.include? "build_single_thread"
       ENV["NUMBER_OF_PROCESSORS"] = "1"
@@ -102,6 +87,30 @@ class Mrtrix3 < Formula
 
     bin.install Dir["release/bin/*"]
     cp_r 'release/lib/.', "#{prefix}/lib/"
+
+    # copy and link scripts
+    system "mkdir", "#{prefix}/scripts"
+    cp_r 'scripts/.', "#{prefix}/scripts/"
+    # find scripts that have lib.app.initParser and add others manually
+    scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initParser"`
+    scripts = scripts.split("\n")
+    other_scripts = ["#{prefix}/scripts/foreach", \
+      "#{prefix}/scripts/average_response", \
+      "#{prefix}/scripts/blend", \
+      "#{prefix}/scripts/convert_bruker", \
+      "#{prefix}/scripts/notfound"]
+    scripts.concat other_scripts
+    scripts = scripts.uniq.sort
+    for scrpt in scripts
+      print "linking "+Pathname(scrpt).each_filename.to_a[-1]+"\n"
+      # bin.install_symlink prefix/"scripts/"Pathname(scrpt).each_filename.to_a[-1]
+      system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
+    end
+
+    # TODO: add matlab scripts to matlab path
+    # TODO: mrtrix_bash_completion
+
+    print "Installation done. You can find MRtrix in #{prefix}"
 
   end
 end
