@@ -37,6 +37,7 @@ class Mrtrix3 < Formula
   sha256 "abce25cde2870abc8bd487f44f061d3e3bd42f36618519b740b7f5e74eba1e20"
   version "0.3.15"
   head 'https://github.com/MRtrix3/mrtrix3.git'
+  revision 1
 
   depends_on "eigen" => :build
   depends_on "pkg-config" => :build
