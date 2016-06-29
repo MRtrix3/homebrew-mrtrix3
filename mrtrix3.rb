@@ -46,7 +46,7 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  0.3.15-32-g01c8f96
+  version  '0.3.15-32-g01c8f96'
   revision 0
 
 
@@ -62,8 +62,8 @@ class Mrtrix3 < Formula
   depends_on Qt5Requirement => :recommended
 
   option "build_single_thread", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
-  option "stable", "Install latest tagged stable version. Default is last commit on master."
-  option "without-matlab", "Do not add mrtrix scripts to matlab path"
+  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
+  option "without-matlab", "Do not add MRtrix scripts to matlab path."
 
   def execute (cmd)
     # verbose alternative to: system cmd
