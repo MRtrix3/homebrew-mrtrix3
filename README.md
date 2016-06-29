@@ -19,13 +19,12 @@ You can install the latest version of MRtrix3 with:
 You can get all installation options with
 
     brew info mrtrix3
-
     
-## Using the last stable version of MRtrix3
+## Using the latest stable version of MRtrix3
 
-You can install the last tagged (stable) version of MRtrix3 with:
+You can install the latest tagged (stable) version of MRtrix3 with:
 
-    brew install mrtrix3_stable
+    brew install mrtrix3 --stable
     
 ##  Updating MRtrix3
 
@@ -37,9 +36,3 @@ MRtrix3 will get upgraded when you upgrade all homebrew packages:
 If you want to avoid upgrading MRtrix3 the next time you upgrade homebrew you can do so with
 
     brew pin mrtrix3
-    
-or 
-
-    brew pin mrtrix3_stable
-    
-depending on the installed version.
