@@ -47,7 +47,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '0.3.15-266-g2bf7838'
-  revision 0
+  revision 1
 
 
   # devel do
@@ -160,7 +160,7 @@ class Mrtrix3 < Formula
     system "mkdir", "#{prefix}/scripts"
     cp_r 'scripts/.', "#{prefix}/scripts/"
     # find scripts that have lib.app.initParser and add others manually
-    scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initParser"`
+    scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initialise"`
     scripts = scripts.split("\n")
     other_scripts = ["#{prefix}/scripts/foreach", \
       "#{prefix}/scripts/average_response", \
