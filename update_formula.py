@@ -53,6 +53,7 @@ if __name__ == '__main__':
 
         if remote != current:
             formula[iline] = current_line.replace(current, remote)
+            formula[iline + 1] = 'revision 0'
             with open ('mrtrix3.rb', 'w') as fout:
                 fout.writelines(formula)
             subprocess.call('git add mrtrix3.rb', shell = True)
