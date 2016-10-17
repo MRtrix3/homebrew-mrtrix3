@@ -98,8 +98,8 @@ class Mrtrix3 < Formula
 
         matlab_bins = glob.glob("/Applications/MATLAB_R20*/bin/matlab")
         if not len(matlab_bins):
-            print ("no matlab binary found")
-            sys.exit(1)
+            print ("warning: no matlab binary found")
+            sys.exit(0)
 
         for bin in matlab_bins:
             matlab_root = os.path.split(os.path.split(bin)[0])[0]
