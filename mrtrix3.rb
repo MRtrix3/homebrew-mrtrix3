@@ -54,7 +54,8 @@ revision 0
   #   version '0.3_dev'
   # end
 
-  depends_on :python if MacOS.version <= :snow_leopard
+  # depends_on :python if MacOS.version <= :snow_leopard
+  depends_on :python => :recommended
   depends_on "eigen" => :build
   depends_on "pkg-config" => :build
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
@@ -144,6 +145,7 @@ revision 0
     end
 
     system "git", "log", "-1"
+    system "python", "--version"
     conf = [ "./configure"]
     if build.include? "without-qt5"
       conf.push("-nogui")
