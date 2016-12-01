@@ -118,6 +118,16 @@ revision 0
   end
 
   def install
+    xcodeerror=`xcodebuild 2>&1`
+    puts xcodeerror
+    if xcodeerror.include? "tool 'xcodebuild' requires Xcode"
+      puts "\nxcodebuild failed with the error message:"
+      puts xcodeerror 
+      puts "If the command line tools were installed before Xcode, you can fix this with:"
+      puts "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+      raise 'command line tools failure'  
+    end
+
     if build.include? "stable"
       system "git", "reset",  "--hard", "origin/master"
       latesttag = `git describe --tags --abbrev=0`.strip
