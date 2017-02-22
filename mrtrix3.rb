@@ -101,13 +101,23 @@ class Mrtrix3 < Formula
             print ("no matlab binary found")
             sys.exit(1)
 
+        startup_locations = []
         for bin in matlab_bins:
             matlab_root = os.path.split(os.path.split(bin)[0])[0]
-            startup = os.path.join(matlab_root, "toolbox", "local", "startup.m")
+            startup_locations.append(os.path.join(matlab_root, "toolbox", "local", "startup.m"))
+
+        userdir = os.expanduser('~/Documents/MATLAB')
+        if os.path.isdir(userdir):
+            startup_locations.append(os.path.join(userdir,"startup.m"))
+
+        for startup in startup_locations:
             if not path_is_set(startup):
-                with open (startup, "a") as inp:
-                    inp.write("addpath('#{prefix}/matlab')" + os.linesep )
-                print ("added mrtrix path to " + startup)
+                try:
+                    with open (startup, "a") as inp:
+                        inp.write("addpath('#{prefix}/matlab')" + os.linesep )
+                    print ("added mrtrix path to " + startup)
+                except:
+                    print "WARNING: could not set mrtrix path in Matlab startup file: " + startup
             else:
                 print ("mrtrix path already set in " + startup)
       EOS
@@ -134,7 +144,11 @@ class Mrtrix3 < Formula
     cp_r 'matlab/.', "#{prefix}/matlab/"
     # add mrtrix to matlab path
     if not build.include? "without-matlab"
-      set_matlab_path()
+      begin
+        set_matlab_path()
+      rescue StandardError => bang
+        print "Unable to set Matlab path: " + bang
+      end
     end
 
     system "mkdir", "#{prefix}/icons"
