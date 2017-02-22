@@ -98,28 +98,32 @@ class Mrtrix3 < Formula
 
         matlab_bins = glob.glob("/Applications/MATLAB_R20*/bin/matlab")
         if not len(matlab_bins):
-            print ("no matlab binary found")
-            sys.exit(1)
+            print ("WARNING: no matlab binary found")
 
         startup_locations = []
         for bin in matlab_bins:
             matlab_root = os.path.split(os.path.split(bin)[0])[0]
             startup_locations.append(os.path.join(matlab_root, "toolbox", "local", "startup.m"))
 
-        userdir = os.expanduser('~/Documents/MATLAB')
+        userdir = os.path.expanduser('~/Documents/MATLAB')
         if os.path.isdir(userdir):
             startup_locations.append(os.path.join(userdir,"startup.m"))
 
+        is_set = 0
         for startup in startup_locations:
             if not path_is_set(startup):
                 try:
                     with open (startup, "a") as inp:
                         inp.write("addpath('#{prefix}/matlab')" + os.linesep )
                     print ("added mrtrix path to " + startup)
+                    is_set += 1
                 except:
                     print "WARNING: could not set mrtrix path in Matlab startup file: " + startup
             else:
                 print ("mrtrix path already set in " + startup)
+                is_set += 1
+        if not (is_set):
+            raise Exception('could not set mrtrix path in any Matlab startup file')
       EOS
       open('matlab_add.py', 'w') do |f|
         f.puts matlab_add
@@ -134,25 +138,13 @@ class Mrtrix3 < Formula
       system "git", "checkout", "#{latesttag}"
     end
 
-    cp "LICENCE.txt", "#{prefix}/"
-    bin.mkpath()
-    system "mkdir", "#{prefix}/lib"
-    system "mkdir", "#{prefix}/release"
-    system "ln", "-s", "#{prefix}/bin", "#{prefix}/release/bin"
-
-    system "mkdir", "#{prefix}/matlab"
-    cp_r 'matlab/.', "#{prefix}/matlab/"
-    # add mrtrix to matlab path
     if not build.include? "without-matlab"
       begin
         set_matlab_path()
-      rescue StandardError => bang
-        print "Unable to set Matlab path: " + bang
+      rescue BuildError => bang
+        print "Unable to set Matlab path: " + bang.to_s + "\n"
       end
     end
-
-    system "mkdir", "#{prefix}/icons"
-    cp_r 'icons/.', "#{prefix}/icons/"
 
     if build.include? "build_single_thread"
       ENV["NUMBER_OF_PROCESSORS"] = "1"
@@ -163,30 +155,65 @@ class Mrtrix3 < Formula
     if build.include? "without-qt5"
       conf.push("-nogui")
     end
-    execute (conf.join(" "))
 
-    execute ("./build")
+    if File.directory?("release")
+      cp "LICENCE.txt", "#{prefix}/"
+      bin.mkpath()
+      system "mkdir", "#{prefix}/lib"
+      system "mkdir", "#{prefix}/release"
+      system "ln", "-s", "#{prefix}/bin", "#{prefix}/release/bin"
 
-    bin.install Dir["release/bin/*"]
-    cp_r 'release/lib/.', "#{prefix}/lib/"
+      system "mkdir", "#{prefix}/matlab"
+      cp_r 'matlab/.', "#{prefix}/matlab/"
 
-    # copy and link scripts
-    system "mkdir", "#{prefix}/scripts"
-    cp_r 'scripts/.', "#{prefix}/scripts/"
-    # find scripts that have lib.app.initParser and add others manually
-    scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initParser"`
-    scripts = scripts.split("\n")
-    other_scripts = ["#{prefix}/scripts/foreach", \
-      "#{prefix}/scripts/average_response", \
-      "#{prefix}/scripts/blend", \
-      "#{prefix}/scripts/convert_bruker", \
-      "#{prefix}/scripts/notfound"]
-    scripts.concat other_scripts
-    scripts = scripts.uniq.sort
-    for scrpt in scripts
-      print "linking "+Pathname(scrpt).each_filename.to_a[-1]+"\n"
-      # bin.install_symlink prefix/"scripts/"Pathname(scrpt).each_filename.to_a[-1]
-      system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
+      system "mkdir", "#{prefix}/icons"
+      cp_r 'icons/.', "#{prefix}/icons/"
+
+      execute (conf.join(" "))
+      execute ("./build")
+    
+      bin.install Dir["release/bin/*"]
+      cp_r 'release/lib/.', "#{prefix}/lib/"
+
+      # copy and link scripts
+      system "mkdir", "#{prefix}/scripts"
+      cp_r 'scripts/.', "#{prefix}/scripts/"
+      # find scripts that have lib.app.initParser and add others manually
+      scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initParser"`
+      scripts = scripts.split("\n")
+      other_scripts = ["#{prefix}/scripts/foreach", \
+        "#{prefix}/scripts/average_response", \
+        "#{prefix}/scripts/blend", \
+        "#{prefix}/scripts/convert_bruker", \
+        "#{prefix}/scripts/notfound"]
+      scripts.concat other_scripts
+      scripts = scripts.uniq.sort
+      for scrpt in scripts
+        print "linking "+Pathname(scrpt).each_filename.to_a[-1]+"\n"
+        # bin.install_symlink prefix/"scripts/"Pathname(scrpt).each_filename.to_a[-1]
+        system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
+      end
+
+    else
+      
+      print "UNTESTED"
+      cp "LICENCE.txt", "#{prefix}/"
+      bin.mkpath()
+      system "mkdir", "#{prefix}/lib"
+      system "mkdir", "#{prefix}/bin"
+
+      system "mkdir", "#{prefix}/matlab"
+      cp_r 'matlab/.', "#{prefix}/matlab/"
+
+      system "mkdir", "#{prefix}/icons"
+      cp_r 'icons/.', "#{prefix}/icons/"
+
+      execute (conf.join(" "))
+      execute ("./build")
+
+      bin.install Dir["bin/*"]
+      cp_r 'lib/.', "#{prefix}/lib/"
+
     end
 
     # TODO: mrtrix_bash_completion
