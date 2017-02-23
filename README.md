@@ -63,9 +63,5 @@ Troubleshoot your homebrew installation (if this does not help, [this](https://g
 
 You can test your MRtrix3 installation with
 
-    brew test mrtrix3
-    
-Or test right after installing it:
-
-    brew install mrtrix3 --with-tests
+    brew test -d mrtrix3
     
