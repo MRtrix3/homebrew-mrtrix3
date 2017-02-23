@@ -36,3 +36,15 @@ MRtrix3 will get upgraded when you upgrade all homebrew packages:
 If you want to avoid upgrading MRtrix3 the next time you upgrade homebrew you can do so with
 
     brew pin mrtrix3
+    
+## Troubleshooting
+
+You can test your mrtrix3 installation with
+
+    brew test mrtrix3
+    
+Or test right after installing it:
+
+    brew install mrtrix3 --with-tests
+    
+If you run out of memory during installation, use the option `--without-multithreaded_build`
