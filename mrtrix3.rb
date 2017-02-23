@@ -50,7 +50,7 @@ class Mrtrix3 < Formula
   option "stable", "Install latest tagged stable version. Default is last commit on master branch."
   option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
   option "without-matlab", "Do not add MRtrix scripts to matlab path."
-  # option "with-custom_src_dir", "HACK to test upcoming tag"
+  option "with-copy_src_from_home", "Use MRtrix3 source code from ~/mrtrix3. This settting is for developers and testing purposes!"
   option "with-tests", "run tests."
 
 
@@ -135,7 +135,7 @@ class Mrtrix3 < Formula
 
   def install
     xcodeerror=`xcodebuild 2>&1`
-    puts xcodeerror
+    # puts xcodeerror
     if xcodeerror.include? "tool 'xcodebuild' requires Xcode"
       puts "\nxcodebuild failed with the error message:"
       puts xcodeerror 
@@ -170,11 +170,15 @@ class Mrtrix3 < Formula
       conf.push("-nogui")
     end
 
-    # if build.with? "custom_src_dir"
-    #   external_mrtrix_src_dir = "/Users/mp/mrtrix3-tag_0.3.16"
-    #   execute("rm -r *")
-    #   execute("cp -r "+external_mrtrix_src_dir+"/* ./")
-    # end
+    if build.with? "copy_src_from_home"
+      me = `whoami`.strip
+      external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
+      if not File.directory?("#{external_mrtrix_src_dir}")
+        raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
+      end
+      execute("rm -r *")
+      execute("cp -r "+external_mrtrix_src_dir+"/* ./")
+    end
 
     execute (conf.join(" "))
     bin.mkpath()
