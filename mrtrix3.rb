@@ -51,7 +51,6 @@ class Mrtrix3 < Formula
   option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
   option "without-matlab", "Do not add MRtrix scripts to matlab path."
   option "with-copy_src_from_home", "Use MRtrix3 source code from ~/mrtrix3. This settting is for developers and testing purposes!"
-  option "with-tests", "run tests."
 
 
   depends_on :python => :recommended
@@ -238,12 +237,6 @@ class Mrtrix3 < Formula
 
     end
 
-    if build.with? "tests"
-      print "running tests..."
-      execute("./run_tests")
-      print "tests done"
-    end
-
     # TODO: mrtrix_bash_completion
     
     print "Installation done. MRtrix lives in #{prefix}\n"
@@ -252,17 +245,36 @@ class Mrtrix3 < Formula
   end
 
   test do
-    execute("git clone git@github.com:MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+    if build.with? "copy_src_from_home"
+      me = `whoami`.strip
+      external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
+      if not File.directory?("#{external_mrtrix_src_dir}")
+        raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
+      end
+      execute("rm -r *")
+      execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
+    else
+      execute("git clone git@github.com:MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+    end
+
     cd "mrtrix3"
     githash = File.open("#{pkgshare}/git_hash") {|f| f.readline}
     execute("git checkout #{githash}")
+    system "git", "log", "-1"
     # TODO: use config also for tests
     # cp "#{pkgshare}/config","config"
     # cp_r "#{prefix}/lib/", "lib"
     # mkdir "release"
     # cp "#{pkgshare}/config","release/config"
-    execute("./configure -nogui")
-    execute("./run_tests")
+    begin
+      execute("./configure -nogui")
+      execute("./run_tests")
+    rescue
+      execute("echo 'Unable to run tests.")
+    end
+    execute("if tests failed: rerun with debug flag `brew test -d mrtrix3`, go to #{testpath} and inspect testing.log")
+    system false # `brew test -d mrtrix3` will stop here
+    # execute("cat testing.log")
   end
 end
 
