@@ -39,6 +39,19 @@ If you want to avoid upgrading MRtrix3 the next time you upgrade homebrew you ca
     
 ## Troubleshooting
 
+If you run out of memory during installation, use the option `--without-multithreaded_build`
+
+If you get permission errors try `cd /usr/local && sudo chown -R $(whoami) bin etc include lib sbin share var Frameworks`
+
+Troubleshoot you homebrew installation (if this does not help, [this](https://github.com/Homebrew/brew/blob/master/docs/Common-Issues.md) might help):
+
+    softwareupdate --install --all
+    brew update
+    brew update
+    brew upgrade
+    brew doctor # follow the instructions
+    
+
 You can test your mrtrix3 installation with
 
     brew test mrtrix3
@@ -47,4 +60,3 @@ Or test right after installing it:
 
     brew install mrtrix3 --with-tests
     
-If you run out of memory during installation, use the option `--without-multithreaded_build`
