@@ -1,4 +1,5 @@
-  class Qt5Requirement < Requirement
+
+class Qt5Requirement < Requirement
   fatal true
   satisfy :build_env => false do
     if File.file?("#{HOMEBREW_PREFIX}/opt/qt5/bin/qmake")
@@ -29,25 +30,16 @@ end
 
 
 class Mrtrix3 < Formula
-  desc "MRtrix provides a set of tools to perform diffusion-weighted MRI white matter tractography
-    in the presence of crossing fibres, using Constrained Spherical Deconvolution, and a
-    probabilisitic streamlines algorithm. These applications have been written from scratch in
-    C++, using the functionality provided by Eigen, and Qt.
+  desc "MRtrix3: tools to perform various types of diffusion MRI analyses."
 
-    The software is currently capable of handling DICOM, NIfTI and AnalyseAVW image formats, amongst
-    others. The source code is distributed under the Mozilla Public License.
-
-    For more information on how to install and use MRtrix go to mrtrix.org or http://mrtrix.readthedocs.io
-    "
-
-  homepage "mrtrix.org"
-
-  head "https://github.com/MRtrix3/mrtrix3.git"
+  homepage "http://mrtrix.org"
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '0.3.15-185-gaea6929'
   revision 0
+
+  head "https://github.com/MRtrix3/mrtrix3.git"
 
 
   # devel do
@@ -55,15 +47,18 @@ class Mrtrix3 < Formula
   #   version '0.3_dev'
   # end
 
+  
+  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
+  option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
+  option "without-matlab", "Do not add MRtrix scripts to matlab path."
+  # option "with-custom_src_dir", "HACK to test upcoming tag"
+  option "with-tests", "run tests."
+
   depends_on :python if MacOS.version <= :snow_leopard
   depends_on "eigen" => :build
   depends_on "pkg-config" => :build
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
   depends_on Qt5Requirement => :recommended
-
-  option "build_single_thread", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
-  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
-  option "without-matlab", "Do not add MRtrix scripts to matlab path."
 
   def execute (cmd)
     # verbose alternative to: system cmd
@@ -85,45 +80,52 @@ class Mrtrix3 < Formula
 
   def set_matlab_path ()
     matlab_add = <<-EOS.undent
-        import os, glob, sys
+      import os, glob, sys, subprocess
 
-        def path_is_set(startup):
-            if not os.path.isfile(startup):
-                return False
-            with open (startup, "r") as inp:
-                for line in inp:
-                    if "/usr/local/opt/mrtrix3/matlab" in line:
-                        return True
-            return False
+      # Trick out homebrew's overwrite of USER
+      p = subprocess.Popen('whoami', shell = True, stdout=subprocess.PIPE)
+      me = p.stdout.readline().rstrip()
+      p.wait()
 
-        matlab_bins = glob.glob("/Applications/MATLAB_R20*/bin/matlab")
-        if not len(matlab_bins):
-            print ("WARNING: no matlab binary found")
+      def path_is_set(startup):
+          if not os.path.isfile(startup):
+              return False
+          with open (startup, "r") as inp:
+              for line in inp:
+                  if "#{prefix}/matlab" in line:
+                      return True
+          return False
 
-        startup_locations = []
-        for bin in matlab_bins:
-            matlab_root = os.path.split(os.path.split(bin)[0])[0]
-            startup_locations.append(os.path.join(matlab_root, "toolbox", "local", "startup.m"))
+      matlab_bins = glob.glob("/Applications/MATLAB_R20*/bin/matlab")
+      if not len(matlab_bins):
+          print ("WARNING: no matlab binary found")
 
-        userdir = os.path.expanduser('~/Documents/MATLAB')
-        if os.path.isdir(userdir):
-            startup_locations.append(os.path.join(userdir,"startup.m"))
+      startup_locations = []
+      for bin in matlab_bins:
+          matlab_root = os.path.split(os.path.split(bin)[0])[0]
+          startup_locations.append(os.path.join(matlab_root, "toolbox", "local", "startup.m"))
 
-        is_set = 0
-        for startup in startup_locations:
-            if not path_is_set(startup):
-                try:
-                    with open (startup, "a") as inp:
-                        inp.write("addpath('#{prefix}/matlab')" + os.linesep )
-                    print ("added mrtrix path to " + startup)
-                    is_set += 1
-                except:
-                    print "WARNING: could not set mrtrix path in Matlab startup file: " + startup
-            else:
-                print ("mrtrix path already set in " + startup)
-                is_set += 1
-        if not (is_set):
-            raise Exception('could not set mrtrix path in any Matlab startup file')
+      userdir = os.path.join('/Users',me,'Documents','MATLAB')
+      if os.path.isdir(userdir):
+          startup_locations.append(os.path.join(userdir,"startup.m"))
+      else:
+        print userdir + " not found"
+
+      is_set = 0
+      for startup in startup_locations:
+          if not path_is_set(startup):
+              try:
+                  with open (startup, "a") as inp:
+                      inp.write("addpath('#{prefix}/matlab')" + os.linesep )
+                  print ("added mrtrix path to " + startup)
+                  is_set += 1
+              except:
+                  print "WARNING: could not set mrtrix path in Matlab startup file: " + startup
+          else:
+              print ("mrtrix path already set in " + startup)
+              is_set += 1
+      if not (is_set):
+          raise Exception('could not set mrtrix path in any Matlab startup file')
       EOS
       open('matlab_add.py', 'w') do |f|
         f.puts matlab_add
@@ -138,7 +140,9 @@ class Mrtrix3 < Formula
       system "git", "checkout", "#{latesttag}"
     end
 
-    if not build.include? "without-matlab"
+    if build.without? "matlab"
+      print "ignoring Matlab"
+    else
       begin
         set_matlab_path()
       rescue BuildError => bang
@@ -146,19 +150,34 @@ class Mrtrix3 < Formula
       end
     end
 
-    if build.include? "build_single_thread"
+    if build.without? "multithreaded_build"
       ENV["NUMBER_OF_PROCESSORS"] = "1"
+      print "NUMBER_OF_PROCESSORS = 1"
     end
+    
 
-    system "git", "log", "-1"
     conf = [ "./configure"]
-    if build.include? "without-qt5"
+    if build.without? "qt5"
       conf.push("-nogui")
     end
 
-    if File.directory?("release")
-      cp "LICENCE.txt", "#{prefix}/"
-      bin.mkpath()
+    # if build.with? "custom_src_dir"
+    #   external_mrtrix_src_dir = "/Users/mp/mrtrix3-tag_0.3.16"
+    #   execute("rm -r *")
+    #   execute("cp -r "+external_mrtrix_src_dir+"/* ./")
+    # end
+
+    execute (conf.join(" "))
+    bin.mkpath()
+    cp "LICENCE.txt", "#{prefix}/"
+
+    pkgshare.install "LICENCE.txt"
+
+    system "git", "log", "-1"
+    execute("git rev-parse HEAD > #{pkgshare}/git_hash")
+
+    if File.directory?("release") # pre tag 0.3.16
+      
       system "mkdir", "#{prefix}/lib"
       system "mkdir", "#{prefix}/release"
       system "ln", "-s", "#{prefix}/bin", "#{prefix}/release/bin"
@@ -169,24 +188,12 @@ class Mrtrix3 < Formula
       system "mkdir", "#{prefix}/icons"
       cp_r 'icons/.', "#{prefix}/icons/"
 
-      execute (conf.join(" "))
-      execute ("./build")
-    
-      bin.install Dir["release/bin/*"]
-      cp_r 'release/lib/.', "#{prefix}/lib/"
-
       # copy and link scripts
       system "mkdir", "#{prefix}/scripts"
       cp_r 'scripts/.', "#{prefix}/scripts/"
       # find scripts that have lib.app.initParser and add others manually
-      scripts = `find "#{prefix}/scripts" -type f -print0 | xargs -0 grep -l "lib.app.initParser"`
-      scripts = scripts.split("\n")
-      other_scripts = ["#{prefix}/scripts/foreach", \
-        "#{prefix}/scripts/average_response", \
-        "#{prefix}/scripts/blend", \
-        "#{prefix}/scripts/convert_bruker", \
-        "#{prefix}/scripts/notfound"]
-      scripts.concat other_scripts
+      scripts = `find "#{prefix}/scripts" -type f ! -name "*.*" -maxdepth 1`
+      scripts = scripts.split(" ")
       scripts = scripts.uniq.sort
       for scrpt in scripts
         print "linking "+Pathname(scrpt).each_filename.to_a[-1]+"\n"
@@ -194,13 +201,15 @@ class Mrtrix3 < Formula
         system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
       end
 
-    else
-      
-      print "UNTESTED"
-      cp "LICENCE.txt", "#{prefix}/"
-      bin.mkpath()
-      system "mkdir", "#{prefix}/lib"
-      system "mkdir", "#{prefix}/bin"
+      execute ("./build")
+    
+      bin.install Dir["release/bin/*"]
+      cp_r 'release/lib/.', "#{prefix}/lib/"
+
+      cp "release/config", pkgshare
+
+    else # >= tag_0.3.16
+      cp "config", pkgshare
 
       system "mkdir", "#{prefix}/matlab"
       cp_r 'matlab/.', "#{prefix}/matlab/"
@@ -208,18 +217,39 @@ class Mrtrix3 < Formula
       system "mkdir", "#{prefix}/icons"
       cp_r 'icons/.', "#{prefix}/icons/"
 
-      execute (conf.join(" "))
       execute ("./build")
-
       bin.install Dir["bin/*"]
+
+      system "mkdir", "#{prefix}/lib"
       cp_r 'lib/.', "#{prefix}/lib/"
 
     end
 
-    # TODO: mrtrix_bash_completion
-    # TODO: tests, see https://github.com/optimizers/homebrew-fenics/blob/master/ffc.rb
-    print "Installation done. You can find MRtrix in #{prefix}\n"
+    if build.with? "tests"
+      print "running tests..."
+      execute("./run_tests")
+      print "tests done"
+    end
 
+    # TODO: mrtrix_bash_completion
+    
+    print "Installation done. MRtrix lives in #{prefix}\n"
+    print "For more information go to http://mrtrix.readthedocs.io\n"
+
+  end
+
+  test do
+    execute("git clone git@github.com:MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+    cd "mrtrix3"
+    githash = File.open("#{pkgshare}/git_hash") {|f| f.readline}
+    execute("git checkout #{githash}")
+    # TODO: use config also for tests
+    # cp "#{pkgshare}/config","config"
+    # cp_r "#{prefix}/lib/", "lib"
+    # mkdir "release"
+    # cp "#{pkgshare}/config","release/config"
+    execute("./configure -nogui")
+    execute("./run_tests")
   end
 end
 
