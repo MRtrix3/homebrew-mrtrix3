@@ -36,7 +36,7 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '0.3.15-185-gaea6929'
+  version  '0.3.15-491-g4901e0f'
   revision 0
 
   head "https://github.com/MRtrix3/mrtrix3.git"
@@ -46,7 +46,6 @@ class Mrtrix3 < Formula
   #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
   #   version '0.3_dev'
   # end
-
   
   option "stable", "Install latest tagged stable version. Default is last commit on master branch."
   option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
@@ -54,7 +53,8 @@ class Mrtrix3 < Formula
   # option "with-custom_src_dir", "HACK to test upcoming tag"
   option "with-tests", "run tests."
 
-  depends_on :python if MacOS.version <= :snow_leopard
+
+  depends_on :python => :recommended
   depends_on "eigen" => :build
   depends_on "pkg-config" => :build
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
@@ -134,6 +134,16 @@ class Mrtrix3 < Formula
   end
 
   def install
+    xcodeerror=`xcodebuild 2>&1`
+    puts xcodeerror
+    if xcodeerror.include? "tool 'xcodebuild' requires Xcode"
+      puts "\nxcodebuild failed with the error message:"
+      puts xcodeerror 
+      puts "If the command line tools were installed before Xcode, you can fix this with:"
+      puts "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+      raise 'command line tools failure'  
+    end
+
     if build.include? "stable"
       system "git", "reset",  "--hard", "origin/master"
       latesttag = `git describe --tags --abbrev=0`.strip
@@ -155,7 +165,6 @@ class Mrtrix3 < Formula
       print "NUMBER_OF_PROCESSORS = 1"
     end
     
-
     conf = [ "./configure"]
     if build.without? "qt5"
       conf.push("-nogui")

@@ -1,6 +1,6 @@
 # MRtrix3 installation on OSX via homebrew
 
-This homebrew formula is a new way of installing MRtrix3 on OSX and is currently in development. Please visit the [official website for MRtrix](http://www.mrtrix.org) to access the [documentation for MRtrix3](http://mrtrix.readthedocs.org/), including detailed installation instructions. 
+This homebrew formula is an easy way of installing MRtrix3 on OSX. Please visit the [official website for MRtrix](http://www.mrtrix.org) to access the [documentation for MRtrix3](http://mrtrix.readthedocs.org/), including dependencies and detailed installation instructions. 
 
 If you do not have homebrew yet, install it with 
 
