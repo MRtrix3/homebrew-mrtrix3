@@ -37,7 +37,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '0.3.15-491-g4901e0f'
-  revision 1
+  revision 2
 
   head "https://github.com/MRtrix3/mrtrix3.git"
 
@@ -254,7 +254,7 @@ class Mrtrix3 < Formula
       execute("rm -r *")
       execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
     else
-      execute("git clone git@github.com:MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+      execute("git clone https://github.com/MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
     end
 
     cd "mrtrix3"
