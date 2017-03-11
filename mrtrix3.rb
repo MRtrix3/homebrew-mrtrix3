@@ -36,7 +36,7 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '0.3.15-500-g382393b'
+  version  '0.3.15-514-g97e4b3b'
   revision 2
 
   head "https://github.com/MRtrix3/mrtrix3.git"
