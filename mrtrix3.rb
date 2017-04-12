@@ -37,7 +37,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '0.3.15-532-gc27886f'
-  revision 2
+  revision 3
 
   head "https://github.com/MRtrix3/mrtrix3.git"
 
@@ -48,6 +48,11 @@ class Mrtrix3 < Formula
   # end
   
   option "stable", "Install latest tagged stable version. Default is last commit on master branch."
+  option "test", "Run tests after installation."
+  option "assert", "Build with assert statements (executables are slower)."
+  option "debug", "Build with debug statements (executables are slower)."
+  option "mrconvert", "Build mrconvert, no other binaries unless stated"
+  option "mrinfo", "Build mrinfo, no other binaries unless stated"
   option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
   option "without-matlab", "Do not add MRtrix scripts to matlab path."
   option "with-copy_src_from_home", "Use MRtrix3 source code from ~/mrtrix3. This settting is for developers and testing purposes!"
@@ -130,6 +135,7 @@ class Mrtrix3 < Formula
         f.puts matlab_add
       end
       system "python", "matlab_add.py"
+      rm 'matlab_add.py'
   end
 
   def install
@@ -168,6 +174,12 @@ class Mrtrix3 < Formula
     if build.without? "qt5"
       conf.push("-nogui")
     end
+    if build.include? "assert"
+      conf.push("-assert")
+    end
+    if build.include? "debug"
+      conf.push("-debug")
+    end
 
     if build.with? "copy_src_from_home"
       me = `whoami`.strip
@@ -181,12 +193,13 @@ class Mrtrix3 < Formula
 
     execute (conf.join(" "))
     bin.mkpath()
+    pkgshare.mkpath()
     cp "LICENCE.txt", "#{prefix}/"
+    cp "LICENCE.txt", "#{pkgshare}/"
 
-    pkgshare.install "LICENCE.txt"
-
+    system "git", "reset", "head"
     system "git", "log", "-1"
-    execute("git rev-parse HEAD > #{pkgshare}/git_hash")
+    system "git", "describe", "--always", "--dirty"
 
     if File.directory?("release") # pre tag 0.3.16
       
@@ -213,11 +226,29 @@ class Mrtrix3 < Formula
         system "ln", "-s", scrpt, "#{prefix}/bin/"+Pathname(scrpt).each_filename.to_a[-1]
       end
 
-      execute ("./build")
+      bld = [ "./build"]
+      if build.include? "mrconvert"
+        bld.push("release/bin/mrconvert")
+      end
+      if build.include? "mrinfo"
+        bld.push("release/bin/mrinfo")
+      end
+      execute (bld.join(" "))
+
+      # This has to be before bin.install or else binaries are not in place.
+      if build.include? "test"
+        tst = [ "./run_tests"]
+        if build.include? "mrconvert"
+          tst.push("mrconvert")
+        end
+        execute (tst.join(" "))
+        cp "testing.log", pkgshare
+        print "Testing done. Testlog is in #{pkgshare}\n"
+      end
     
+      execute("git rev-parse HEAD > #{pkgshare}/git_hash")
       bin.install Dir["release/bin/*"]
       cp_r 'release/lib/.', "#{prefix}/lib/"
-
       cp "release/config", pkgshare
 
     else # >= tag_0.3.16
@@ -229,52 +260,74 @@ class Mrtrix3 < Formula
       system "mkdir", "#{prefix}/icons"
       cp_r 'icons/.', "#{prefix}/icons/"
 
-      execute ("./build")
-      bin.install Dir["bin/*"]
+      bld = [ "./build"]
+      if build.include? "mrconvert"
+        bld.push("bin/mrconvert")
+      end
+      if build.include? "mrinfo"
+        bld.push("bin/mrinfo")
+      end
+      execute (bld.join(" "))
 
+
+      # This has to be before bin.install or else binaries are not in place.
+      if build.include? "test"
+        tst = [ "./run_tests"]
+        if build.include? "mrconvert"
+          tst.push("mrconvert")
+        end
+        execute (tst.join(" "))
+        cp "testing.log", pkgshare
+        print "Testing done. Testlog is in #{pkgshare}\n"
+      end
+
+
+      execute("git rev-parse HEAD > #{pkgshare}/git_hash")
+      bin.install Dir["bin/*"]
       system "mkdir", "#{prefix}/lib"
       cp_r 'lib/.', "#{prefix}/lib/"
+      cp "config", pkgshare
 
     end
 
     # TODO: mrtrix_bash_completion
     
-    print "Installation done. MRtrix lives in #{prefix}\n"
+    print "Installation done. MRtrix3 lives in #{prefix}\n"
     print "For more information go to http://mrtrix.readthedocs.io\n"
 
   end
 
-  test do
-    if build.with? "copy_src_from_home"
-      me = `whoami`.strip
-      external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
-      if not File.directory?("#{external_mrtrix_src_dir}")
-        raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
-      end
-      execute("rm -r *")
-      execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
-    else
-      execute("git clone https://github.com/MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
-    end
+  # test do
+  #   if build.with? "copy_src_from_home"
+  #     me = `whoami`.strip
+  #     external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
+  #     if not File.directory?("#{external_mrtrix_src_dir}")
+  #       raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
+  #     end
+  #     execute("rm -r *")
+  #     execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
+  #   else
+  #     execute("git clone https://github.com/MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+  #   end
 
-    cd "mrtrix3"
-    githash = File.open("#{pkgshare}/git_hash") {|f| f.readline}
-    execute("git checkout #{githash}")
-    system "git", "log", "-1"
-    # TODO: use config also for tests
-    # cp "#{pkgshare}/config","config"
-    # cp_r "#{prefix}/lib/", "lib"
-    # mkdir "release"
-    # cp "#{pkgshare}/config","release/config"
-    begin
-      execute("./configure -nogui")
-      execute("./run_tests")
-    rescue
-      execute("echo 'Unable to run tests.")
-    end
-    execute("if tests failed: rerun with debug flag `brew test -d mrtrix3`, go to #{testpath} and inspect testing.log")
-    system false # `brew test -d mrtrix3` will stop here
-    # execute("cat testing.log")
-  end
+  #   cd "mrtrix3"
+  #   githash = File.open("#{pkgshare}/git_hash") {|f| f.readline}
+  #   execute("git checkout #{githash}")
+  #   system "git", "log", "-1"
+  #   # TODO: use config also for tests
+  #   # cp "#{pkgshare}/config","config"
+  #   # cp_r "#{prefix}/lib/", "lib"
+  #   # mkdir "release"
+  #   # cp "#{pkgshare}/config","release/config"
+  #   begin
+  #     execute("./configure -nogui")
+  #     execute("./run_tests")
+  #   rescue
+  #     execute("echo 'Unable to run tests.")
+  #   end
+  #   execute("if tests failed: rerun with debug flag `brew test -d mrtrix3`, go to #{testpath} and inspect testing.log")
+  #   system false # `brew test -d mrtrix3` will stop here
+  #   # execute("cat testing.log")
+  # end
 end
 
