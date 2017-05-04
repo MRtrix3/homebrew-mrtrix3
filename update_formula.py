@@ -22,7 +22,7 @@ def parse_remote():
     except:
         print r
         sys.exit(1)
-    describe = "%s-%s-g%s" % (tag, total_commits, master_sha[:7])
+    describe = "%s-%s-g%s" % (tag, total_commits, master_sha[:8])
     return describe
 
 if __name__ == '__main__':
