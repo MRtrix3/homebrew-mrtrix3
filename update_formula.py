@@ -5,7 +5,7 @@ import re, requests
 def parse_remote():
     # same format as git describe --tags
     # uses api to avoid cloning
-    m = re.compile("(\d+.\d+.\d+)$")
+    m = re.compile("(\d+.\d+)")
     r = requests.get('https://api.github.com/repos/MRtrix3/mrtrix3/tags', json={"key": "value"}).json()
     try:
         remote_tags = [(x['name'], x['commit']['sha']) for x in r if m.search(x['name'])]
