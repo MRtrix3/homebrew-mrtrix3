@@ -37,7 +37,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '0.3.15-1397-g93f159a'
-revision 0
+  revision 1
   # devel do
   #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
   #   version '0.3_dev'
@@ -56,7 +56,7 @@ revision 0
 
   depends_on :python => :recommended
   depends_on "eigen" => :build
-  depends_on "pkg-config" => :build
+  depends_on "pkg-config" => :run
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
   depends_on Qt5Requirement => :recommended
 
@@ -135,6 +135,11 @@ revision 0
   end
 
   def install
+    puts "PATH:"
+    puts ENV["PATH"]
+    if ENV["PATH"].downcase.include? "anaconda"
+      puts "warning: anaconda found in PATH. You might want to exclude those directories from you PATH."
+    end
     xcodeerror=`xcodebuild 2>&1`
     # puts xcodeerror
     if xcodeerror.include? "tool 'xcodebuild' requires Xcode"
@@ -196,6 +201,10 @@ revision 0
     system "git", "reset", "head"
     system "git", "log", "-1"
     system "git", "describe", "--always", "--dirty"
+
+    env = %x[env]
+    puts "shared path: #{pkgshare}"
+    File.open("#{pkgshare}/env", 'w') { |file| file.write(env) }
 
     if File.directory?("release") # pre tag 0.3.16
       
