@@ -36,9 +36,8 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '3.0_RC1-6-ge7f6714a'
-revision 0  #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
-  #   version '0.3_dev'
+  version  '3.0_RC1-29-g60ebd2f5'
+revision 0  #   version '0.3_dev'
   # end
   
   option "stable", "Install latest tagged stable version. Default is last commit on master branch."
