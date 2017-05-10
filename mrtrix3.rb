@@ -36,9 +36,8 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '3.0_RC1-29-g60ebd2f5'
-revision 0  #   version '0.3_dev'
-  # end
+  version  '3.0_RC1-35-g182638e0'
+revision 0  # end
   
   option "stable", "Install latest tagged stable version. Default is last commit on master branch."
   option "test", "Run tests after installation."
