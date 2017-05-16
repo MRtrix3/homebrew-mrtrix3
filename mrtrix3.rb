@@ -36,9 +36,8 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '3.0_RC1-41-ge0c13262'
-revision 0  
-  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
+  version  '3.0_RC1-44-g57e44453'
+revision 0  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
   option "test", "Run tests after installation."
   option "assert", "Build with assert statements (executables are slower)."
   option "debug", "Build with debug statements (executables are slower)."
