@@ -36,8 +36,15 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '3.0_RC1-67-ga15220de'
-revision 0  option "test", "Run tests after installation."
+  version  '3.0_RC1-77-g287865da'
+  revision 1
+  # devel do
+  #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
+  #   version '0.3_dev'
+  # end
+
+  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
+  option "test", "Run tests after installation."
   option "assert", "Build with assert statements (executables are slower)."
   option "debug", "Build with debug statements (executables are slower)."
   option "mrconvert", "Build mrconvert, no other binaries unless stated"
@@ -45,7 +52,6 @@ revision 0  option "test", "Run tests after installation."
   option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
   option "without-matlab", "Do not add MRtrix scripts to matlab path."
   option "with-copy_src_from_home", "Use MRtrix3 source code from ~/mrtrix3. This settting is for developers and testing purposes!"
-
 
   depends_on :python => :recommended
   depends_on "eigen" => :build
@@ -137,10 +143,10 @@ revision 0  option "test", "Run tests after installation."
     # puts xcodeerror
     if xcodeerror.include? "tool 'xcodebuild' requires Xcode"
       puts "\nxcodebuild failed with the error message:"
-      puts xcodeerror 
+      puts xcodeerror
       puts "If the command line tools were installed before Xcode, you can fix this with:"
       puts "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
-      raise 'command line tools failure'  
+      raise 'command line tools failure'
     end
 
     if build.include? "stable"
@@ -163,7 +169,7 @@ revision 0  option "test", "Run tests after installation."
       ENV["NUMBER_OF_PROCESSORS"] = "1"
       print "NUMBER_OF_PROCESSORS = 1"
     end
-    
+
     conf = [ "./configure"]
     if build.without? "qt5"
       conf.push("-nogui")
@@ -200,7 +206,7 @@ revision 0  option "test", "Run tests after installation."
     File.open("#{pkgshare}/env", 'w') { |file| file.write(env) }
 
     if File.directory?("release") # pre tag 0.3.16
-      
+
       system "mkdir", "#{prefix}/lib"
       system "mkdir", "#{prefix}/release"
       system "ln", "-s", "#{prefix}/bin", "#{prefix}/release/bin"
@@ -243,7 +249,7 @@ revision 0  option "test", "Run tests after installation."
         cp "testing.log", pkgshare
         print "Testing done. Testlog is in #{pkgshare}\n"
       end
-    
+
       execute("git rev-parse HEAD > #{pkgshare}/git_hash")
       bin.install Dir["release/bin/*"]
       cp_r 'release/lib/.', "#{prefix}/lib/"
@@ -289,7 +295,7 @@ revision 0  option "test", "Run tests after installation."
     end
 
     # TODO: mrtrix_bash_completion
-    
+
     print "Installation done. MRtrix3 lives in #{prefix}\n"
     print "For more information go to http://mrtrix.readthedocs.io\n"
 
