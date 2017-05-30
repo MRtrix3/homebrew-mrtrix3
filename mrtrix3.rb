@@ -36,8 +36,8 @@ class Mrtrix3 < Formula
 
   url "https://github.com/MRtrix3/mrtrix3.git"
 
-  version  '3.0_RC1-67-ga15220de'
-revision 0  option "test", "Run tests after installation."
+  version  '3.0_RC1-77-g287865da'
+  revision 0
   option "assert", "Build with assert statements (executables are slower)."
   option "debug", "Build with debug statements (executables are slower)."
   option "mrconvert", "Build mrconvert, no other binaries unless stated"
