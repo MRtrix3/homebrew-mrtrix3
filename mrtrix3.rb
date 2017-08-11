@@ -37,7 +37,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '3.0_RC2-2-gca446aad'
-  revision 0
+  revision 1
   # devel do
   #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
   #   version '0.3_dev'
@@ -257,6 +257,7 @@ class Mrtrix3 < Formula
 
     else # >= tag_0.3.16
       cp "config", pkgshare
+      cp "configure.log", pkgshare
 
       system "mkdir", "#{prefix}/matlab"
       cp_r 'matlab/.', "#{prefix}/matlab/"
