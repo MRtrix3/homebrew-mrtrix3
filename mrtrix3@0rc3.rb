@@ -32,7 +32,7 @@ class Mrtrix3AT0rc3 < Formula
 
   bottle do
     root_url "https://github.com/MRtrix3/mrtrix3/releases/download/3.0_RC3"
-    rebuild 1
+    rebuild 0
     cellar :any
     sha256 "b877b32ef2acf73e1d14eef32f43c159ebe095675cff7a9bd7c97162989aee15" => :high_sierra
   end
