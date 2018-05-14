@@ -293,41 +293,68 @@ EOS
     end
   end
 
-  # test do
-  #   execute("#{prefix}/run_tests")
-  # end
-  
-  # test do
-  #   if build.with? "copy_src_from_home"
-  #     me = `whoami`.strip
-  #     external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
-  #     if not File.directory?("#{external_mrtrix_src_dir}")
-  #       raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
-  #     end
-  #     execute("rm -r *")
-  #     execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
-  #   else
-  #     execute("git clone https://github.com/MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
-  #   end
 
-  #   cd "mrtrix3"
-  #   githash = File.open("#{pkgshare}/git_hash") {|f| f.readline}
-  #   execute("git checkout #{githash}")
-  #   system "git", "log", "-1"
-  #   # TODO: use config also for tests
-  #   # cp "#{pkgshare}/config","config"
-  #   # cp_r "#{prefix}/lib/", "lib"
-  #   # mkdir "release"
-  #   # cp "#{pkgshare}/config","release/config"
-  #   begin
-  #     execute("./configure -nogui")
-  #     execute("./run_tests")
-  #   rescue
-  #     execute("echo 'Unable to run tests.")
-  #   end
-  #   execute("if tests failed: rerun with debug flag `brew test -d mrtrix3`, go to #{testpath} and inspect testing.log")
-  #   system false # `brew test -d mrtrix3` will stop here
-  #   # execute("cat testing.log")
-  # end
+  test do
+    if build.with? "copy_src_from_home"
+      me = `whoami`.strip
+      external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
+      if not File.directory?("#{external_mrtrix_src_dir}")
+        raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
+      end
+      execute("rm -r *")
+      execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
+    else
+      execute("git clone https://github.com/MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+    end
+
+    cd "mrtrix3"
+    execute("git checkout #{version}")
+    system "git", "log", "-1"
+    # TODO: use config also for tests
+    # cp "#{pkgshare}/config","config"
+    # cp_r "#{prefix}/lib/", "lib"
+    # mkdir "release"
+    # cp "#{pkgshare}/config","release/config"
+    begin
+      execute("./configure -nogui")
+      # exec "./run_tests"
+      puts("if test times (dead lock?), repeat, interrupt here (ctrl+z), and go to #{testpath}/mrtrix3 and ./run_tests")
+      # require 'open3'
+      # Open3.popen2e("./run_tests") {|i,oe,t|
+      #   oe.each {|line|
+      #     puts(line)
+      #   }
+      # }
+
+      # Open3.popen2e("./run_tests") do |stdin, stdout_and_stderr, thread|
+      #   stdin.sync = true;
+      #   stdout_and_stderr.sync = true;
+      #   while line=stdout_and_stderr.gets do 
+      #     puts "#{Time.now} #{line}"
+      #   end
+      # end
+
+      # system("./run_tests &> homebrew-test.log")
+
+      pipe_cmd_in, pipe_cmd_out = IO.pipe
+      cmd_pid = Process.spawn("./run_tests", :out => pipe_cmd_out, :err => pipe_cmd_out)
+
+      @exitstatus = :not_done
+      Thread.new do
+        Process.wait(cmd_pid); 
+        @exitstatus = $?.exitstatus
+      end
+
+      pipe_cmd_out.close
+      out = pipe_cmd_in.read;
+      sleep(0.1) while @exitstatus == :not_done
+      puts "child: cmd out length = #{out.length}; Exit status: #{@exitstatus}"
+    rescue
+      execute("echo 'Unable to run tests.")
+    end
+    execute("if tests failed: rerun with debug flag `brew test -d mrtrix3`, go to #{testpath} and inspect testing.log")
+    system false # `brew test -d mrtrix3` will stop here
+    # execute("cat testing.log")
+  end
 end
 
