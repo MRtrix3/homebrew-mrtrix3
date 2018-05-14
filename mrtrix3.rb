@@ -49,13 +49,14 @@ class Mrtrix3 < Formula
   option "debug", "Build with debug statements (executables are slower)."
   option "mrconvert", "Build mrconvert, no other binaries unless stated"
   option "mrinfo", "Build mrinfo, no other binaries unless stated"
+  option "mrview", "Build mrview, no other binaries unless stated"
   option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
   option "without-matlab", "Do not add MRtrix scripts to matlab path."
   option "with-copy_src_from_home", "Use MRtrix3 source code from ~/mrtrix3. This settting is for developers and testing purposes!"
 
   depends_on "python" => :recommended
   depends_on "eigen" => :build
-  depends_on "pkg-config" => :run
+  depends_on "pkg-config"
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
   depends_on Qt5Requirement => :recommended
 
@@ -249,6 +250,9 @@ EOS
       if build.include? "mrinfo"
         bld.push("release/bin/mrinfo")
       end
+      if build.include? "mrview"
+        bld.push("release/bin/mrview")
+      end
       execute (bld.join(" "))
 
       # This has to be before bin.install or else binaries are not in place.
@@ -283,6 +287,9 @@ EOS
       end
       if build.include? "mrinfo"
         bld.push("bin/mrinfo")
+      end
+      if build.include? "mrview"
+        bld.push("bin/mrview")
       end
       execute (bld.join(" "))
 
