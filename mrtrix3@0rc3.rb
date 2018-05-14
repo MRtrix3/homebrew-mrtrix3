@@ -7,12 +7,7 @@ class Mrtrix3AT0rc3 < Formula
 
   version  '3.0_RC3-0-g57e351eb'
   revision 0
-  # devel do
-  #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
-  #   version '0.3_dev'
-  # end
 
-  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
   option "test", "Run tests after installation."
   option "assert", "Build with assert statements (executables are slower)."
   option "debug", "Build with debug statements (executables are slower)."
@@ -28,7 +23,7 @@ class Mrtrix3AT0rc3 < Formula
   depends_on "pkg-config"
   depends_on "qt5"
 
-  conflicts_with "mrtrix3", :because => "version (this) conflicts with non-tagged version of mrtrix3." 
+  conflicts_with "mrtrix3", :because => "tagged version (this) conflicts with non-tagged version of mrtrix3." 
 
   bottle do
     root_url "https://github.com/MRtrix3/mrtrix3/releases/download/3.0_RC3"
@@ -36,8 +31,6 @@ class Mrtrix3AT0rc3 < Formula
     cellar :any
     sha256 "b877b32ef2acf73e1d14eef32f43c159ebe095675cff7a9bd7c97162989aee15" => :high_sierra
   end
-
-  # latesttag = "3.0_RC3"
 
   def execute (cmd)
     # verbose alternative to: system cmd
@@ -143,16 +136,6 @@ EOS
 
     system "git", "reset",  "--hard", "origin/master"      
     system "git", "checkout", "#{version}"
-
-    if build.without? "matlab"
-      print "ignoring Matlab"
-    else
-      begin
-        set_matlab_path()
-      rescue BuildError => bang
-        print "Unable to set Matlab path: " + bang.to_s + "\n"
-      end
-    end
 
     if build.without? "multithreaded_build"
       ENV["NUMBER_OF_PROCESSORS"] = "1"
@@ -297,6 +280,23 @@ EOS
 
   end
 
+  def post_install
+    print "running post_install"
+    if build.without? "matlab"
+      print "ignoring Matlab"
+    else
+      begin
+        set_matlab_path()
+      rescue BuildError => bang
+        print "Unable to set Matlab path: " + bang.to_s + "\n"
+      end
+    end
+  end
+
+  # test do
+  #   execute("#{prefix}/run_tests")
+  # end
+  
   # test do
   #   if build.with? "copy_src_from_home"
   #     me = `whoami`.strip
