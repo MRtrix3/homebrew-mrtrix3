@@ -37,7 +37,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '3.0_RC3-0-g57e351eb'
-  revision 0
+  revision 1
   # devel do
   #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
   #   version '0.3_dev'
@@ -59,6 +59,8 @@ class Mrtrix3 < Formula
   depends_on "pkg-config"
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
   depends_on Qt5Requirement => :recommended
+
+  conflicts_with "mrtrix3@0rc3", :because => "tagged version (mrtrix3@0rc3) conflicts with non-tagged version of mrtrix3 (this)."
 
   def execute (cmd)
     # verbose alternative to: system cmd
