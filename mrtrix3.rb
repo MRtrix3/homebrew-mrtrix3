@@ -60,7 +60,7 @@ class Mrtrix3 < Formula
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
   depends_on Qt5Requirement => :recommended
 
-  conflicts_with "mrtrix3@0rc3", :because => "tagged version (mrtrix3@0rc3) conflicts with non-tagged version of mrtrix3 (this)."
+  conflicts_with "mrtrix3_0rc3", :because => "tagged version (mrtrix3@0rc3) conflicts with non-tagged version of mrtrix3 (this)."
 
   def execute (cmd)
     # verbose alternative to: system cmd
