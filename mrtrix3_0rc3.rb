@@ -1,4 +1,59 @@
-class Mrtrix3AT0rc3 < Formula
+run_test_patch = <<-EOS
+diff --git a/run_tests b/run_tests
+index a9dd80320..bd5fb9133 100755
+--- a/run_tests
++++ b/run_tests
+@@ -10,6 +10,10 @@ cat > $LOGFILE <<EOD
+
+ EOD
+
++no_fetch=${1:-do_fetch}
++no_build=${2:-do_build}
++
++if [ $no_fetch != no_fetch ]; then
+ echo -n "fetching test data... "
+ git submodule update --init >> $LOGFILE 2>&1
+
+@@ -19,9 +23,12 @@ if [ $? != 0 ]; then
+ else
+   echo OK
+ fi
++else
++  shift
++fi
+
+
+-
++if [ $no_build != no_build ]; then
+ echo -n "building testing commands... "
+ cat >> $LOGFILE <<EOD
+
+@@ -30,9 +37,10 @@ cat >> $LOGFILE <<EOD
+ ## building test commands...
+
+ EOD
++
+ (
+   cd testing
+-  ../build
++  ../build -nopaginate
+ ) >> $LOGFILE 2>&1
+ if [ $? != 0 ]; then
+   echo ERROR!
+@@ -40,6 +48,9 @@ if [ $? != 0 ]; then
+ else
+   echo OK
+ fi
++else
++  shift
++fi
+
+
+ # generate list of tests to run:
+EOS
+
+
+class Mrtrix30rc3 < Formula
   desc "MRtrix3: tools to perform various types of diffusion MRI analyses."
 
   homepage "http://mrtrix.org"
@@ -6,7 +61,7 @@ class Mrtrix3AT0rc3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '3.0_RC3-0-g57e351eb'
-  revision 0
+  revision 1
 
   option "test", "Run tests after installation."
   option "assert", "Build with assert statements (executables are slower)."
@@ -29,7 +84,7 @@ class Mrtrix3AT0rc3 < Formula
     root_url "https://github.com/MRtrix3/mrtrix3/releases/download/3.0_RC3"
     rebuild 0
     cellar :any
-    sha256 "b877b32ef2acf73e1d14eef32f43c159ebe095675cff7a9bd7c97162989aee15" => :high_sierra
+    sha256 "5483cefd60aa12fe2039997588b055e811863c65b75577e96da06a8b0ea96edd" => :high_sierra
   end
 
   def execute (cmd)
@@ -260,10 +315,21 @@ EOS
           tst.push("mrconvert")
         end
         execute (tst.join(" "))
-        cp "testing.log", pkgshare
+        system "mkdir", "#{prefix}/testing"
+        cp_r 'testing/.', "#{prefix}/testing/"
+        
+        # patch run_tests tests to not fetch the data and not build
+        open('run_test_patch.diff', 'w') do |f|
+          f.puts un_test_patch
+        end
+        system "python", "matlab_add.py"
+        execute("git apply run_test_patch.diff")
+        rm 'run_test_patch.diff'
+
+        cp_r 'run_tests', "#{prefix}"
+        cp "testing.log", "#{prefix}"
         print "Testing done. Testlog is in #{pkgshare}\n"
       end
-
 
       execute("git rev-parse HEAD > #{pkgshare}/git_hash")
       bin.install Dir["bin/*"]
@@ -295,66 +361,13 @@ EOS
 
 
   test do
-    if build.with? "copy_src_from_home"
-      me = `whoami`.strip
-      external_mrtrix_src_dir = "/Users/"+me+"/mrtrix3"
-      if not File.directory?("#{external_mrtrix_src_dir}")
-        raise "not found: "+external_mrtrix_src_dir+". --with-copy_src_from_home is intended for developers only"
-      end
-      execute("rm -r *")
-      execute("cp -r "+external_mrtrix_src_dir+" #{testpath}/mrtrix3")
-    else
-      execute("git clone https://github.com/MRtrix3/mrtrix3.git #{testpath}/mrtrix3")
+    if build.include? "test"
+      puts "#{prefix}"
+      puts testpath
+      cp_r "#{prefix}/.", testpath # mrtrix directory is not writable, testpath is
+      cd testpath
+      system ("./run_tests no_fetch no_build")
     end
-
-    cd "mrtrix3"
-    execute("git checkout #{version}")
-    system "git", "log", "-1"
-    # TODO: use config also for tests
-    # cp "#{pkgshare}/config","config"
-    # cp_r "#{prefix}/lib/", "lib"
-    # mkdir "release"
-    # cp "#{pkgshare}/config","release/config"
-    begin
-      execute("./configure -nogui")
-      # exec "./run_tests"
-      puts("if test times (dead lock?), repeat, interrupt here (ctrl+z), and go to #{testpath}/mrtrix3 and ./run_tests")
-      # require 'open3'
-      # Open3.popen2e("./run_tests") {|i,oe,t|
-      #   oe.each {|line|
-      #     puts(line)
-      #   }
-      # }
-
-      # Open3.popen2e("./run_tests") do |stdin, stdout_and_stderr, thread|
-      #   stdin.sync = true;
-      #   stdout_and_stderr.sync = true;
-      #   while line=stdout_and_stderr.gets do 
-      #     puts "#{Time.now} #{line}"
-      #   end
-      # end
-
-      # system("./run_tests &> homebrew-test.log")
-
-      pipe_cmd_in, pipe_cmd_out = IO.pipe
-      cmd_pid = Process.spawn("./run_tests", :out => pipe_cmd_out, :err => pipe_cmd_out)
-
-      @exitstatus = :not_done
-      Thread.new do
-        Process.wait(cmd_pid); 
-        @exitstatus = $?.exitstatus
-      end
-
-      pipe_cmd_out.close
-      out = pipe_cmd_in.read;
-      sleep(0.1) while @exitstatus == :not_done
-      puts "child: cmd out length = #{out.length}; Exit status: #{@exitstatus}"
-    rescue
-      execute("echo 'Unable to run tests.")
-    end
-    execute("if tests failed: rerun with debug flag `brew test -d mrtrix3`, go to #{testpath} and inspect testing.log")
-    system false # `brew test -d mrtrix3` will stop here
-    # execute("cat testing.log")
   end
 end
 
