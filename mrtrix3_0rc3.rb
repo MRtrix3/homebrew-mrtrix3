@@ -166,11 +166,11 @@ for startup in startup_locations:
 if not (is_set):
     raise Exception('could not set mrtrix path in any Matlab startup file')
 EOS
-      open('matlab_add.py', 'w') do |f|
+      open(pkgshare+'/matlab_add.py', 'w') do |f|
         f.puts matlab_add
       end
-      system "python", "matlab_add.py"
-      rm 'matlab_add.py'
+      system "python", pkgshare+'/matlab_add.py'
+      rm pkgshare+'/matlab_add.py'
   end
 
   def install
@@ -353,8 +353,9 @@ EOS
     else
       begin
         set_matlab_path()
-      rescue BuildError => bang
-        print "Unable to set Matlab path: " + bang.to_s + "\n"
+      rescue Exception => bang
+        print "Warning: unable to set Matlab path: " + bang.to_s + "\n"
+        print "You can add it manually to your startup.m: " + "addpath('#{prefix}/matlab')\n"
       end
     end
   end
