@@ -341,13 +341,9 @@ EOS
 
     # TODO: mrtrix_bash_completion
 
-    print "Installation done. MRtrix3 lives in #{prefix}\n"
-    print "For more information go to http://mrtrix.readthedocs.io\n"
-
   end
 
   def post_install
-    print "running post_install"
     if build.without? "matlab"
       print "ignoring Matlab"
     else
@@ -358,6 +354,10 @@ EOS
         print "You can add it manually to your startup.m: " + "addpath('#{prefix}/matlab')\n"
       end
     end
+    print "Installation done. The MRtrix3 binaries are #{prefix}/bin\n"
+    print "If you have an existing version of MRtrix3 in your PATH, make sure to remove it from your PATH\n"
+    print "Alternatively rename its folder or prepend your path with #{prefix}/bin\n"
+    print "For more information go to http://mrtrix.readthedocs.io\n"
   end
 
 
