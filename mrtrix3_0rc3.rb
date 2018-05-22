@@ -356,7 +356,7 @@ EOS
     end
     print "Installation done. The MRtrix3 binaries are #{prefix}/bin\n"
     print "If you have an existing version of MRtrix3 in your PATH, make sure to remove it from your PATH\n"
-    print "Alternatively rename its folder or prepend your path with #{prefix}/bin\n"
+    # print "Alternatively, rename its folder or prepend your PATH with #{prefix}/bin\n"
     print "For more information go to http://mrtrix.readthedocs.io\n"
   end
 
