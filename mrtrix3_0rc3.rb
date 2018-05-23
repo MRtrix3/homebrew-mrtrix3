@@ -189,6 +189,7 @@ EOS
       raise 'command line tools failure'
     end
 
+    system "git", "fetch", "--unshallow"
     system "git", "reset",  "--hard", "origin/master"      
     system "git", "checkout", "#{version}"
 
@@ -198,9 +199,9 @@ EOS
     end
 
     conf = [ "./configure"]
-    if build.without? "qt5"
-      conf.push("-nogui")
-    end
+    # if build.without? "qt5"
+    #   conf.push("-nogui")
+    # end
     if build.include? "assert"
       conf.push("-assert")
     end
@@ -223,7 +224,6 @@ EOS
     pkgshare.mkpath()
     cp "LICENCE.txt", "#{prefix}/"
     cp "LICENCE.txt", "#{pkgshare}/"
-
     system "git", "reset", "head"
     system "git", "log", "-1"
     system "git", "describe", "--always", "--dirty"
