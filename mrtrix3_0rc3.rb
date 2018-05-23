@@ -354,8 +354,13 @@ EOS
         print "You can add it manually to your startup.m: " + "addpath('#{prefix}/matlab')\n"
       end
     end
-    print "Installation done. The MRtrix3 binaries are #{prefix}/bin\n"
-    print "If you have an existing version of MRtrix3 in your PATH, make sure to remove it from your PATH\n"
+    print "Installation done. The MRtrix3 binaries are in #{prefix}/bin\n"
+    print "\n"
+    print "⚠️: If you have an existing version of MRtrix3 in your PATH\n"
+    print "and want to use this version without prepending '$(brew --prefix)/bin' to your commands,\n"
+    print "make sure to remove the previous version from your PATH.\n"
+    print "You can find out with 'ls -l $(which mrinfo)'\n"
+    print "\n"
     # print "Alternatively, rename its folder or prepend your PATH with #{prefix}/bin\n"
     print "For more information go to http://mrtrix.readthedocs.io\n"
   end
