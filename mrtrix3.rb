@@ -37,7 +37,7 @@ class Mrtrix3 < Formula
   url "https://github.com/MRtrix3/mrtrix3.git"
 
   version  '3.0_RC3-9-g8cef8321'
-  revision 0
+  revision 1
   # devel do
   #   url 'https://github.com/MRtrix3/mrtrix3.git', :branch => 'master', :revision => 'bogus474279845b7e79fc2b5ffad'
   #   version '0.3_dev'
@@ -56,6 +56,8 @@ class Mrtrix3 < Formula
 
   depends_on "python" => :recommended
   depends_on "eigen" => :build
+  depends_on "fftw" => :recommended
+  depends_on "libtiff" => :recommended
   depends_on "pkg-config"
   # depends_on "qt5" # not used as users might want to use an existing qt or install mrtrix without a GUI
   depends_on Qt5Requirement => :recommended
