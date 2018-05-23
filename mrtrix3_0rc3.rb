@@ -77,6 +77,8 @@ class Mrtrix30rc3 < Formula
   depends_on "eigen" => :build
   depends_on "pkg-config"
   depends_on "qt5"
+  depends_on "fftw"
+  depends_on "libtiff"
 
   conflicts_with "mrtrix3", :because => "tagged version (this) conflicts with non-tagged version of mrtrix3." 
 
