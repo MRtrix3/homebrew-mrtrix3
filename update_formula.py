@@ -10,7 +10,7 @@ def parse_remote():
     try:
         remote_tags = [(x['name'], x['commit']['sha']) for x in r if m.search(x['name'])]
     except:
-        print r
+        print(r)
         sys.exit(1)
     tag = remote_tags[0][0]
     tag_sha = remote_tags[0][1]
@@ -20,7 +20,7 @@ def parse_remote():
     try:
         total_commits = r['total_commits']
     except:
-        print r
+        print(r)
         sys.exit(1)
     describe = "%s-%s-g%s" % (tag, total_commits, master_sha[:8])
     return describe
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     tempdir = tempfile.mkdtemp()
     try:
-        print (tempdir)
+        print(tempdir)
         os.chdir(tempdir)
         subprocess.call("git clone https://github.com/MRtrix3/homebrew-mrtrix3.git", shell = True)
         os.chdir(tempdir+"/homebrew-mrtrix3")
@@ -46,10 +46,10 @@ if __name__ == '__main__':
         if current_line is None:
             raise Exception ("version parsing failed")
         current = current_line.split()[1].replace("'", "")
-        print ("formula: " + current)
+        print("formula: " + current)
 
         remote = parse_remote()
-        print ("remote: " + remote)
+        print("remote: " + remote)
 
         if remote != current:
             formula[iline] = current_line.replace(current, remote)
