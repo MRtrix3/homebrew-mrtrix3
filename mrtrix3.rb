@@ -43,14 +43,14 @@ class Mrtrix3 < Formula
   #   version '0.3_dev'
   # end
 
-  option "stable", "Install latest tagged stable version. Default is last commit on master branch."
+  option "with-stable", "Install latest tagged stable version. Default is last commit on master branch."
   option "test", "Run tests after installation."
-  option "assert", "Build with assert statements (executables are slower)."
-  option "debug", "Build with debug statements (executables are slower)."
-  option "mrconvert", "Build mrconvert, no other binaries unless stated"
-  option "mrinfo", "Build mrinfo, no other binaries unless stated"
-  option "mrview", "Build mrview, no other binaries unless stated"
-  option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads."
+  option "with-assert", "Build with assert statements (executables are slower)."
+  option "with-debug", "Build with debug statements (executables are slower)."
+  option "with-mrconvert", "Build mrconvert, no other binaries unless stated"
+  option "with-mrinfo", "Build mrinfo, no other binaries unless stated"
+  option "with-mrview", "Build mrview, no other binaries unless stated"
+  option "without-multithreaded_build", "This is useful if your computer has many cores but not enough RAM to build MRtrix using multiple threads. Alternatively, set the environment variable HOMEBREW_NUMBER_OF_PROCESSORS=1"
   option "without-matlab", "Do not add MRtrix scripts to matlab path."
   option "with-copy_src_from_home", "Use MRtrix3 source code from ~/mrtrix3. This settting is for developers and testing purposes!"
 
@@ -166,7 +166,7 @@ EOS
       raise 'command line tools failure'
     end
 
-    if build.include? "stable"
+    if build.with? "stable"
       system "git", "reset",  "--hard", "origin/master"
       latesttag = `git describe --tags --abbrev=0`.strip
       system "git", "checkout", "#{latesttag}"
@@ -182,19 +182,21 @@ EOS
       end
     end
 
+    if !ENV['HOMEBREW_NUMBER_OF_PROCESSORS'].nil? # ENV option: HOMEBREW_NUMBER_OF_PROCESSORS
+      ENV['NUMBER_OF_PROCESSORS'] = ENV['HOMEBREW_NUMBER_OF_PROCESSORS']
+    end
     if build.without? "multithreaded_build"
       ENV["NUMBER_OF_PROCESSORS"] = "1"
-      print "NUMBER_OF_PROCESSORS = 1"
     end
 
     conf = [ "./configure"]
     if build.without? "qt5"
       conf.push("-nogui")
     end
-    if build.include? "assert"
+    if build.with? "assert"
       conf.push("-assert")
     end
-    if build.include? "debug"
+    if build.with? "debug"
       conf.push("-debug")
     end
 
@@ -248,21 +250,21 @@ EOS
       end
 
       bld = [ "./build"]
-      if build.include? "mrconvert"
+      if build.with? "mrconvert"
         bld.push("release/bin/mrconvert")
       end
-      if build.include? "mrinfo"
+      if build.with? "mrinfo"
         bld.push("release/bin/mrinfo")
       end
-      if build.include? "mrview"
+      if build.with? "mrview"
         bld.push("release/bin/mrview")
       end
       execute (bld.join(" "))
 
       # This has to be before bin.install or else binaries are not in place.
-      if build.include? "test"
+      if build.with? "test"
         tst = [ "./run_tests"]
-        if build.include? "mrconvert"
+        if build.with? "mrconvert"
           tst.push("mrconvert")
         end
         execute (tst.join(" "))
@@ -286,22 +288,22 @@ EOS
       cp_r 'icons/.', "#{prefix}/icons/"
 
       bld = [ "./build"]
-      if build.include? "mrconvert"
+      if build.with? "mrconvert"
         bld.push("bin/mrconvert")
       end
-      if build.include? "mrinfo"
+      if build.with? "mrinfo"
         bld.push("bin/mrinfo")
       end
-      if build.include? "mrview"
+      if build.with? "mrview"
         bld.push("bin/mrview")
       end
       execute (bld.join(" "))
 
 
       # This has to be before bin.install or else binaries are not in place.
-      if build.include? "test"
+      if build.with? "test"
         tst = [ "./run_tests"]
-        if build.include? "mrconvert"
+        if build.with? "mrconvert"
           tst.push("mrconvert")
         end
         execute (tst.join(" "))
