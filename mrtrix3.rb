@@ -167,7 +167,8 @@ EOS
     end
 
     if build.with? "stable"
-      system "git", "reset",  "--hard", "origin/master"
+      system "git", "reset", "--hard", "origin/master"
+      system "git", "fetch", "-t"
       latesttag = `git describe --tags --abbrev=0`.strip
       system "git", "checkout", "#{latesttag}"
     end
